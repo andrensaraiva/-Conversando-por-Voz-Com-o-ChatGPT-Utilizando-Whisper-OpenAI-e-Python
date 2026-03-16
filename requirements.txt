@@ -1,0 +1,27 @@
+# ============================================================
+# VoxNPC — Dependências do Projeto
+# ============================================================
+
+# IA Generativa
+openai>=1.0.0
+
+# Speech-to-Text (Transcrição de áudio)
+openai-whisper>=20231117
+
+# Text-to-Speech (Síntese de voz)
+gTTS>=2.5.0
+
+# Gravação de áudio do microfone
+sounddevice>=0.4.6
+soundfile>=0.12.1
+numpy>=1.24.0
+
+# Reprodução de áudio
+pygame>=2.5.0
+
+# Gerenciamento de variáveis de ambiente
+python-dotenv>=1.0.0
+
+# Utilitários
+rich>=13.0.0
+click>=8.1.0
