@@ -1,0 +1,19 @@
+# ============================================================
+# VoxNPC — Configuração do Render.com
+# ============================================================
+# Para deploy no Render:
+# 1. Crie uma conta em https://render.com
+# 2. New → Web Service → conecte seu repositório GitHub
+# 3. O Render detecta este arquivo automaticamente
+# ============================================================
+
+services:
+  - type: web
+    runtime: docker
+    name: voxnpc
+    plan: free
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-3.5-turbo
