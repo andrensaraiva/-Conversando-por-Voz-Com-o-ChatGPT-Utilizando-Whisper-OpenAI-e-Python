@@ -19,6 +19,9 @@ numpy>=1.24.0
 # Reprodução de áudio
 pygame>=2.5.0
 
+# Web API (upload de áudio)
+python-multipart>=0.0.6
+
 # Gerenciamento de variáveis de ambiente
 python-dotenv>=1.0.0
 

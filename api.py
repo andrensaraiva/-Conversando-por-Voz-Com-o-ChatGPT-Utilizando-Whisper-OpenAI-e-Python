@@ -12,11 +12,15 @@ Uso local:
 Acesse: http://localhost:8000
 """
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, UploadFile, File, Form
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel, Field
 from pathlib import Path
+from openai import OpenAI
+import io
+import tempfile
+import os
 
 import config
 from src.ai_engine import AIEngine
@@ -140,3 +144,62 @@ async def reset_session(session_id: str = "default"):
     if session_id in sessions:
         del sessions[session_id]
     return {"status": "ok"}
+
+
+@app.post("/api/transcribe")
+async def transcribe_audio(audio: UploadFile = File(...)):
+    """Transcreve áudio enviado pelo navegador usando a API Whisper da OpenAI."""
+    client = OpenAI(api_key=config.OPENAI_API_KEY)
+
+    # Salva o áudio em arquivo temporário com a extensão correta
+    suffix = ".webm"
+    if audio.content_type:
+        ext_map = {
+            "audio/webm": ".webm",
+            "audio/ogg": ".ogg",
+            "audio/wav": ".wav",
+            "audio/mp4": ".m4a",
+            "audio/mpeg": ".mp3",
+        }
+        suffix = ext_map.get(audio.content_type, ".webm")
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        content = await audio.read()
+        tmp.write(content)
+        tmp_path = tmp.name
+
+    try:
+        with open(tmp_path, "rb") as f:
+            transcription = client.audio.transcriptions.create(
+                model="whisper-1",
+                file=f,
+                language="pt",
+            )
+        return {"text": transcription.text}
+    finally:
+        os.unlink(tmp_path)
+
+
+@app.post("/api/tts")
+async def text_to_speech(request: Request):
+    """Converte texto em áudio usando a API TTS da OpenAI."""
+    body = await request.json()
+    text = body.get("text", "")
+    if not text:
+        return {"error": "Texto vazio"}
+
+    client = OpenAI(api_key=config.OPENAI_API_KEY)
+
+    response = client.audio.speech.create(
+        model="tts-1",
+        voice="nova",
+        input=text,
+        response_format="mp3",
+    )
+
+    audio_bytes = response.content
+    return StreamingResponse(
+        io.BytesIO(audio_bytes),
+        media_type="audio/mpeg",
+        headers={"Content-Disposition": "inline; filename=response.mp3"},
+    )
